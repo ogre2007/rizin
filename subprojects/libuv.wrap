@@ -3,7 +3,7 @@ directory = libuv-v1.42.0
 
 source_url = https://github.com/rizinorg/fallback-repo/raw/main/libuv-v1.42.0.tar.gz
 source_filename = libuv-v1.42.0.tar.gz
-source_hash = 371e5419708f6aaeb8656671f89400b92a9bba6443369af1bb70bcd6e4b3c764
+source_hash = 43129625155a8aed796ebe90b8d4c990a73985ec717de2b2d5d3a23cfe4deb72
 source_fallback_url = https://dist.libuv.org/dist/v1.42.0/libuv-v1.42.0.tar.gz
 
 patch_directory = libuv-v1.42.0
