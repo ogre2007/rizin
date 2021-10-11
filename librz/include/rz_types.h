@@ -500,12 +500,12 @@ static inline void *rz_new_copy(int size, void *data) {
 #if defined(_M_X64) || defined(_M_AMD64)
 #define RZ_SYS_ARCH   "x86"
 #define RZ_SYS_BITS   (RZ_SYS_BITS_32 | RZ_SYS_BITS_64)
-#define RZ_SYS_ENDIAN 1
+#define RZ_SYS_ENDIAN 0
 #define __x86_64__    1
 #elif defined(_M_IX86)
 #define RZ_SYS_ARCH   "x86"
 #define RZ_SYS_BITS   (RZ_SYS_BITS_32)
-#define RZ_SYS_ENDIAN 1
+#define RZ_SYS_ENDIAN 0
 #define __i386__      1
 #elif defined(_M_ARM64)
 #define RZ_SYS_ARCH   "arm"
