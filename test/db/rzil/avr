@@ -1,0 +1,9 @@
+NAME=Emulation on main
+FILE=bins/firmware/main.avr
+CMDS=<<EOF
+aezi
+aezs 1
+EOF
+EXPECT=<<EOF
+EOF
+RUN

@@ -18,6 +18,7 @@ https://en.wikipedia.org/wiki/Atmel_AVR_instruction_set
 #include <rz_analysis.h>
 
 #include "../../asm/arch/avr/disassembler.h"
+#include "../il/avr/il_avr.h"
 
 static RDESContext desctx;
 
@@ -1870,7 +1871,7 @@ static int esil_avr_hook_reg_write(RzAnalysisEsil *esil, const char *name, ut64 
 
 	return 0;
 }
-
+/*
 static int esil_avr_init(RzAnalysisEsil *esil) {
 	if (!esil) {
 		return false;
@@ -1888,6 +1889,7 @@ static int esil_avr_init(RzAnalysisEsil *esil) {
 static int esil_avr_fini(RzAnalysisEsil *esil) {
 	return true;
 }
+*/
 
 static bool set_reg_profile(RzAnalysis *analysis) {
 	const char *p =
@@ -2085,8 +2087,10 @@ RzAnalysisPlugin rz_analysis_plugin_avr = {
 	.bits = 8 | 16, // 24 big regs conflicts
 	.op = &avr_op,
 	.set_reg_profile = &set_reg_profile,
-	.esil_init = esil_avr_init,
-	.esil_fini = esil_avr_fini,
+	//.esil_init = esil_avr_init,
+	//.esil_fini = esil_avr_fini,
+	.rzil_fini = avr_fini_rzil,
+	.rzil_init = avr_init_rzil,
 	.analysis_mask = analysis_mask_avr,
 };
 

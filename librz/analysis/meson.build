@@ -43,6 +43,7 @@ rz_analysis_sources = [
   'serialize_typelink.c',
   'type_pdb.c',
   'typelink.c',
+  'il/avr/il_avr.c',
   'p/analysis_6502.c',
   'p/analysis_6502_cs.c',
   'p/analysis_8051.c',
