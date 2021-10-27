@@ -3,7 +3,7 @@
 #define AVR_REG_SIZE  8
 #define AVR_SREG_SIZE 8
 #define AVR_RAMP_SIZE 8
-#define AVR_SP_SIZE 16
+#define AVR_SP_SIZE   16
 
 // SREG = I|T|H|S|V|N|Z|C
 // bits   0|1|2|3|4|5|6|7
@@ -16,8 +16,8 @@
 #define AVR_SREG_Z 6
 #define AVR_SREG_C 7
 
-#define AVR_SPL_ADDR 0x3d
-#define AVR_SPH_ADDR 0x3e
+#define AVR_SPL_ADDR  0x3d
+#define AVR_SPH_ADDR  0x3e
 #define AVR_SREG_ADDR 0x3f
 
 #define avr_return_val_if_invalid_gpr(x, v) \
@@ -130,6 +130,40 @@ static RzPVector *avr_il_clr(AVROp *aop, RzAnalysis *analysis) {
 	return rz_il_make_oplist(5, clr, S, V, N, Z);
 }
 
+static RzPVector *avr_il_cpi(AVROp *aop, RzAnalysis *analysis) {
+	// SREG = compare(Rd, K)
+	ut16 Rd = aop->param[0];
+	ut16 K = aop->param[1];
+	avr_return_val_if_invalid_gpr(Rd, NULL);
+
+	RzILOp *clr = NULL;
+	RzILOp *H = NULL;
+	RzILOp *S = NULL;
+	RzILOp *V = NULL;
+	RzILOp *N = NULL;
+	RzILOp *Z = NULL;
+	RzILOp *C = NULL;
+
+	//avr_il_assign_imm(clr, avr_registers[Rd], 0);
+	//avr_il_set_bit(S, "SREG", 0, AVR_SREG_S);
+	//avr_il_set_bit(V, "SREG", 0, AVR_SREG_V);
+	//avr_il_set_bit(N, "SREG", 0, AVR_SREG_N);
+	//avr_il_set_bit(Z, "SREG", 1, AVR_SREG_Z);
+
+	return rz_il_make_nop_list(); //rz_il_make_oplist(5, clr, S, V, N, Z);
+}
+
+static RzPVector *avr_il_ldi(AVROp *aop, RzAnalysis *analysis) {
+	// Rd = K
+	ut16 Rd = aop->param[0];
+	ut16 K = aop->param[1];
+	avr_return_val_if_invalid_gpr(Rd, NULL);
+
+	RzILOp *ldi = NULL;
+	avr_il_assign_imm(ldi, avr_registers[Rd], K);
+	return rz_il_make_oplist(1, ldi);
+}
+
 static RzPVector *avr_il_out(AVROp *aop, RzAnalysis *analysis) {
 	// I/O(A) = Rr -> None
 	ut16 A = aop->param[0];
@@ -137,7 +171,7 @@ static RzPVector *avr_il_out(AVROp *aop, RzAnalysis *analysis) {
 	avr_return_val_if_invalid_gpr(Rr, NULL);
 
 	RzILOp *out = NULL;
-	switch(A) {
+	switch (A) {
 	case AVR_SPL_ADDR:
 		avr_il_cast_reg(out, "SP", AVR_SP_SIZE, 0, avr_registers[Rr]);
 		break;
@@ -152,6 +186,24 @@ static RzPVector *avr_il_out(AVROp *aop, RzAnalysis *analysis) {
 		break;
 	}
 	return rz_il_make_oplist(1, out);
+}
+
+static RzPVector *avr_il_rjmp(AVROp *aop, RzAnalysis *analysis) {
+	// PC = PC + k + 1
+	ut16 k = aop->param[0];
+	// op size is added by the VM so we can remove it from the original value
+	rz_il_bv_set_from_ut64(analysis->rzil->vm->pc, k - aop->size);
+	return rz_il_make_nop_list();
+}
+
+static RzPVector *avr_il_ser(AVROp *aop, RzAnalysis *analysis) {
+	// Rd = $FF
+	ut16 Rd = aop->param[0];
+	avr_return_val_if_invalid_gpr(Rd, NULL);
+
+	RzILOp *ser = NULL;
+	avr_il_assign_imm(ser, avr_registers[Rd], 0xFF);
+	return rz_il_make_oplist(1, ser);
 }
 
 static avr_rzil_op avr_ops[AVR_OP_SIZE] = {
@@ -197,7 +249,7 @@ static avr_rzil_op avr_ops[AVR_OP_SIZE] = {
 	avr_il_nop, /* AVR_OP_COM */
 	avr_il_nop, /* AVR_OP_CP */
 	avr_il_nop, /* AVR_OP_CPC */
-	avr_il_nop, /* AVR_OP_CPI */
+	avr_il_cpi,
 	avr_il_nop, /* AVR_OP_CPSE */
 	avr_il_nop, /* AVR_OP_DEC */
 	avr_il_nop, /* AVR_OP_DES */
@@ -218,7 +270,7 @@ static avr_rzil_op avr_ops[AVR_OP_SIZE] = {
 	avr_il_nop, /* AVR_OP_LAT */
 	avr_il_nop, /* AVR_OP_LD */
 	avr_il_nop, /* AVR_OP_LDD */
-	avr_il_nop, /* AVR_OP_LDI */
+	avr_il_ldi,
 	avr_il_nop, /* AVR_OP_LDS */
 	avr_il_nop, /* AVR_OP_LPM */
 	avr_il_nop, /* AVR_OP_LSL */
@@ -238,7 +290,7 @@ static avr_rzil_op avr_ops[AVR_OP_SIZE] = {
 	avr_il_nop, /* AVR_OP_RCALL */
 	avr_il_nop, /* AVR_OP_RET */
 	avr_il_nop, /* AVR_OP_RETI */
-	avr_il_nop, /* AVR_OP_RJMP */
+	avr_il_rjmp,
 	avr_il_nop, /* AVR_OP_ROL */
 	avr_il_nop, /* AVR_OP_ROR */
 	avr_il_nop, /* AVR_OP_SBC */
@@ -253,7 +305,7 @@ static avr_rzil_op avr_ops[AVR_OP_SIZE] = {
 	avr_il_nop, /* AVR_OP_SEH */
 	avr_il_nop, /* AVR_OP_SEI */
 	avr_il_nop, /* AVR_OP_SEN */
-	avr_il_nop, /* AVR_OP_SER */
+	avr_il_ser,
 	avr_il_nop, /* AVR_OP_SES */
 	avr_il_nop, /* AVR_OP_SET */
 	avr_il_nop, /* AVR_OP_SEV */
@@ -303,7 +355,6 @@ RZ_IPI bool avr_rzil_opcode(RzAnalysis *analysis, RzAnalysisOp *op, ut64 pc, AVR
 		RZ_LOG_ERROR("RzIL: AVR: out of bounds op\n");
 		return false;
 	}
-
 
 	avr_rzil_op create_op = avr_ops[aop->mnemonic];
 	op->rzil_op->ops = create_op(aop, analysis);
@@ -371,7 +422,7 @@ RZ_IPI bool avr_rzil_init(RzAnalysis *analysis) {
 		rz_il_vm_add_reg(rzil->vm, "EIND", AVR_RAMP_SIZE);
 	}
 
-	rz_il_vm_add_mem(rzil->vm, addr_space);
+	rz_il_vm_add_mem(rzil->vm, 8);
 
 	return true;
 }
