@@ -2,11 +2,9 @@
 #define RZIL_ANALYSIS_AVR_H
 
 #include <rz_analysis.h>
+#include "../../../asm/arch/avr/disassembler.h"
 
-typedef struct il_avr_context_t {
-	ut32 foobar;
-} AVRILContext;
-
+RZ_IPI bool avr_rzil_opcode(RzAnalysis *analysis, RzAnalysisOp *op, ut64 pc, AVROp *aop);
 RZ_IPI bool avr_rzil_fini(RZ_NONNULL RzAnalysis *analysis);
 RZ_IPI bool avr_rzil_init(RZ_NONNULL RzAnalysis *analysis);
 

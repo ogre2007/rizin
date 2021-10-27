@@ -1477,7 +1477,7 @@ INST_HANDLER(swap) { // SWAP Rd
 }
 
 OPCODE_DESC opcodes[] = {
-	//         op      mask    select  cycles  size type
+	//         op     mask    select  cycles  size type
 	INST_DECL(break, 0xffff, 0x9698, 1, 2, TRAP), // BREAK
 	INST_DECL(eicall, 0xffff, 0x9519, 0, 2, UCALL), // EICALL
 	INST_DECL(eijmp, 0xffff, 0x9419, 0, 2, UJMP), // EIJMP
@@ -1554,7 +1554,6 @@ OPCODE_DESC opcodes[] = {
 	INST_DECL(sbc, 0xfc00, 0x0800, 1, 2, SUB), // SBC Rd, Rr
 	INST_DECL(sub, 0xfc00, 0x1800, 1, 2, SUB), // SUB Rd, Rr
 	INST_DECL(in, 0xf800, 0xb000, 1, 2, IO), // IN Rd, A
-	//INST_DECL (lds16,  0xf800, 0xa000, 1,      2,   LOAD   ), // LDS Rd, k
 	INST_DECL(out, 0xf800, 0xb800, 1, 2, IO), // OUT A, Rr
 	INST_DECL(andi, 0xf000, 0x7000, 1, 2, AND), // ANDI Rd, K
 	INST_DECL(cpi, 0xf000, 0x3000, 1, 2, CMP), // CPI Rd, K
@@ -1566,6 +1565,7 @@ OPCODE_DESC opcodes[] = {
 	INST_DECL(subi, 0xf000, 0x5000, 1, 2, SUB), // SUBI Rd, Rr
 	INST_DECL(ldd, 0xd200, 0x8000, 0, 2, LOAD), // LD Rd, Y/Z+q
 	INST_DECL(std, 0xd200, 0x8200, 0, 2, STORE), // ST Y/Z+q, Rr
+	//INST_DECL(lds16,  0xf800, 0xa000, 1, 2, LOAD), // LDS Rd, k
 
 	INST_LAST
 };
@@ -1641,14 +1641,17 @@ static int avr_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 *
 	CPU_MODEL *cpu;
 	ut64 offset;
 	int size = -1;
+	AVROp aop = { 0 };
 
 	set_invalid_op(op, addr);
 
 	RzStrBuf *sb = rz_strbuf_new("invalid");
+
 	if (len > 1) {
-		size = avr_disassembler(buf, len, addr, analysis->big_endian, sb);
+		size = avr_disassembler(buf, len, addr, analysis->big_endian, &aop, sb);
 	}
 	op->mnemonic = rz_strbuf_drain(sb);
+	op->cycles = aop.cycles;
 
 	if (!op->mnemonic) {
 		return -1;
@@ -1660,24 +1663,9 @@ static int avr_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 *
 	// select cpu info
 	cpu = get_cpu_model(analysis->cpu);
 
-	// set memory layout registers
-	if (analysis->rzil) {
-	} else if (analysis->esil) {
-		offset = 0;
-		rz_analysis_esil_reg_write(analysis->esil, "_prog", offset);
+	// set RzIL
+	avr_rzil_opcode(analysis, op, addr, &aop);
 
-		offset += (1 << analysis->arch_target->profile->pc);
-		rz_analysis_esil_reg_write(analysis->esil, "_io", offset);
-
-		offset += analysis->arch_target->profile->sram_start;
-		rz_analysis_esil_reg_write(analysis->esil, "_sram", offset);
-
-		offset += analysis->arch_target->profile->sram_size;
-		rz_analysis_esil_reg_write(analysis->esil, "_eeprom", offset);
-
-		offset += analysis->arch_target->profile->eeprom_size;
-		rz_analysis_esil_reg_write(analysis->esil, "_page", offset);
-	}
 	// process opcode
 	avr_op_analyze(analysis, op, addr, buf, len, cpu);
 
@@ -2028,7 +2016,7 @@ static int archinfo(RzAnalysis *analysis, int q) {
 	if (q == RZ_ANALYSIS_ARCHINFO_MIN_OP_SIZE) {
 		return 2;
 	}
-	return 2; // XXX
+	return 2;
 }
 
 static ut8 *analysis_mask_avr(RzAnalysis *analysis, int size, const ut8 *data, ut64 at) {
@@ -2083,7 +2071,7 @@ RzAnalysisPlugin rz_analysis_plugin_avr = {
 	.desc = "AVR code analysis plugin",
 	.license = "LGPL3",
 	.arch = "avr",
-	.esil = true,
+	.esil = false,
 	.archinfo = archinfo,
 	.bits = 8 | 16, // 24 big regs conflicts
 	.op = &avr_op,
