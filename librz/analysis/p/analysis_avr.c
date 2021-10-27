@@ -1661,7 +1661,8 @@ static int avr_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 *
 	cpu = get_cpu_model(analysis->cpu);
 
 	// set memory layout registers
-	if (analysis->esil) {
+	if (analysis->rzil) {
+	} else if (analysis->esil) {
 		offset = 0;
 		rz_analysis_esil_reg_write(analysis->esil, "_prog", offset);
 
@@ -1684,7 +1685,7 @@ static int avr_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 *
 
 	return size;
 }
-
+/*
 static bool avr_custom_des(RzAnalysisEsil *esil) {
 	ut64 key, encrypt, text, des_round;
 	ut32 key_lo, key_hi, buf_lo, buf_hi;
@@ -1871,7 +1872,7 @@ static int esil_avr_hook_reg_write(RzAnalysisEsil *esil, const char *name, ut64 
 
 	return 0;
 }
-/*
+
 static int esil_avr_init(RzAnalysisEsil *esil) {
 	if (!esil) {
 		return false;
@@ -2087,10 +2088,8 @@ RzAnalysisPlugin rz_analysis_plugin_avr = {
 	.bits = 8 | 16, // 24 big regs conflicts
 	.op = &avr_op,
 	.set_reg_profile = &set_reg_profile,
-	//.esil_init = esil_avr_init,
-	//.esil_fini = esil_avr_fini,
-	.rzil_fini = avr_fini_rzil,
-	.rzil_init = avr_init_rzil,
+	.rzil_init = avr_rzil_init,
+	.rzil_fini = avr_rzil_fini,
 	.analysis_mask = analysis_mask_avr,
 };
 

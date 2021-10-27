@@ -5,9 +5,9 @@
 
 typedef struct il_avr_context_t {
 	ut32 foobar;
-} AvrILContext;
+} AVRILContext;
 
-RZ_IPI bool avr_fini_rzil(RZ_NONNULL RzAnalysis *analysis);
-RZ_IPI bool avr_init_rzil(RZ_NONNULL RzAnalysis *analysis);
+RZ_IPI bool avr_rzil_fini(RZ_NONNULL RzAnalysis *analysis);
+RZ_IPI bool avr_rzil_init(RZ_NONNULL RzAnalysis *analysis);
 
 #endif /* RZIL_ANALYSIS_AVR_H */
